@@ -18,6 +18,7 @@ export default function ResolutionRun() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(50);
   const [gameOver, setGameOver] = useState(false);
+  const [victory, setVictory] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const gameStateRef = useRef({
     playerX: 0,
@@ -36,6 +37,7 @@ export default function ResolutionRun() {
   const resetGame = () => {
     setScore(50);
     setGameOver(false);
+    setVictory(false);
     setFinalScore(0);
     const state = gameStateRef.current;
     state.words = [];
@@ -236,6 +238,11 @@ export default function ResolutionRun() {
   useEffect(() => {
     if (score <= 0 && !gameOver) {
       setGameOver(true);
+      setVictory(false);
+      setFinalScore(score);
+    } else if (score >= 500 && !gameOver) {
+      setGameOver(true);
+      setVictory(true);
       setFinalScore(score);
     }
   }, [score, gameOver]);
@@ -251,9 +258,19 @@ export default function ResolutionRun() {
       {gameOver && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-10">
           <div className="text-center text-white px-6">
-            <h1 className="text-6xl font-bold mb-4">Game Over!</h1>
-            <p className="text-3xl mb-2">Final Score: {finalScore}</p>
-            <p className="text-4xl font-bold mb-8 text-yellow-400">Set your new resolutions!</p>
+            {victory ? (
+              <>
+                <h1 className="text-6xl font-bold mb-4 text-green-400">🎉 Congratulations! 🎉</h1>
+                <p className="text-3xl mb-2">Final Score: {finalScore}</p>
+                <p className="text-4xl font-bold mb-8 text-yellow-400">You&apos;ve set your resolutions!</p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-6xl font-bold mb-4">Game Over!</h1>
+                <p className="text-3xl mb-2">Final Score: {finalScore}</p>
+                <p className="text-4xl font-bold mb-8 text-yellow-400">Set your new resolutions!</p>
+              </>
+            )}
             <button
               onClick={resetGame}
               className="px-8 py-4 bg-green-500 hover:bg-green-600 text-white text-2xl font-bold rounded-lg transition-colors"
