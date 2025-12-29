@@ -102,7 +102,7 @@ export default function MidnightIceRun() {
 
     // Screen shake
     let shakeAmount = 0;
-    let shakeDecay = 0.9;
+    const shakeDecay = 0.9;
 
     // Collision effect
     let collisionGlitch = 0;
