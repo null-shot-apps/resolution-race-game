@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-export default function CyberpunkNeonChase() {
+export default function MidnightIceRun() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [score, setScore] = useState(50);
   const [gameOver, setGameOver] = useState(false);
@@ -63,6 +63,43 @@ export default function CyberpunkNeonChase() {
 
     const particles: Particle[] = [];
 
+    // Snow/Confetti particles
+    interface SnowParticle {
+      x: number;
+      y: number;
+      z: number;
+      speed: number;
+      size: number;
+      color: string;
+    }
+
+    const snowParticles: SnowParticle[] = [];
+
+    // Initialize snow particles
+    for (let i = 0; i < 150; i++) {
+      snowParticles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        z: Math.random(),
+        speed: Math.random() * 3 + 2,
+        size: Math.random() * 4 + 2,
+        color: Math.random() > 0.5 ? '#ffffff' : ['#ffd700', '#ff69b4', '#00ffff', '#ff00ff'][Math.floor(Math.random() * 4)],
+      });
+    }
+
+    // Fireworks
+    interface Firework {
+      x: number;
+      y: number;
+      radius: number;
+      maxRadius: number;
+      color: string;
+      life: number;
+    }
+
+    const fireworks: Firework[] = [];
+    let lastFireworkTime = Date.now();
+
     // Screen shake
     let shakeAmount = 0;
     let shakeDecay = 0.9;
@@ -114,8 +151,25 @@ export default function CyberpunkNeonChase() {
       return dist < playerSize;
     }
 
-    // Draw tunnel
-    function drawTunnel() {
+    // Spawn fireworks
+    function spawnFirework() {
+      const now = Date.now();
+      if (now - lastFireworkTime > 800) {
+        const colors = ['#ff0066', '#00ffff', '#ffaa00', '#00ff00', '#ff00ff', '#ffd700'];
+        fireworks.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height * 0.4,
+          radius: 0,
+          maxRadius: Math.random() * 100 + 80,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1,
+        });
+        lastFireworkTime = now;
+      }
+    }
+
+    // Draw background with fireworks
+    function drawBackground() {
       ctx.save();
       
       // Apply screen shake
@@ -127,61 +181,149 @@ export default function CyberpunkNeonChase() {
         shakeAmount *= shakeDecay;
       }
 
-      // Background
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#0a0015');
-      gradient.addColorStop(1, '#1a0030');
-      ctx.fillStyle = gradient;
+      // Dark winter night sky
+      const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGradient.addColorStop(0, '#000814');
+      skyGradient.addColorStop(0.5, '#001d3d');
+      skyGradient.addColorStop(1, '#003566');
+      ctx.fillStyle = skyGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Fog effect
-      const fogGradient = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height * 0.3, 0,
-        canvas.width / 2, canvas.height * 0.3, canvas.width * 0.8
-      );
-      fogGradient.addColorStop(0, 'rgba(138, 0, 230, 0.1)');
-      fogGradient.addColorStop(1, 'rgba(138, 0, 230, 0)');
-      ctx.fillStyle = fogGradient;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Draw fireworks
+      fireworks.forEach((fw, index) => {
+        fw.radius += 3;
+        fw.life -= 0.008;
 
-      // Grid lines with intense bloom
-      ctx.strokeStyle = '#00ffff';
+        if (fw.life <= 0 || fw.radius > fw.maxRadius) {
+          fireworks.splice(index, 1);
+          return;
+        }
+
+        ctx.save();
+        ctx.globalAlpha = fw.life;
+
+        // Outer explosion ring
+        ctx.strokeStyle = fw.color;
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 40;
+        ctx.shadowColor = fw.color;
+        ctx.beginPath();
+        ctx.arc(fw.x, fw.y, fw.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Inner glow
+        const fwGradient = ctx.createRadialGradient(fw.x, fw.y, 0, fw.x, fw.y, fw.radius);
+        fwGradient.addColorStop(0, fw.color.replace(')', ', 0.4)').replace('rgb', 'rgba'));
+        fwGradient.addColorStop(1, fw.color.replace(')', ', 0)').replace('rgb', 'rgba'));
+        ctx.fillStyle = fwGradient;
+        ctx.beginPath();
+        ctx.arc(fw.x, fw.y, fw.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Sparkles
+        for (let i = 0; i < 12; i++) {
+          const angle = (i / 12) * Math.PI * 2;
+          const sparkX = fw.x + Math.cos(angle) * fw.radius;
+          const sparkY = fw.y + Math.sin(angle) * fw.radius;
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 20;
+          ctx.shadowColor = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(sparkX, sparkY, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    // Draw snow/confetti
+    function drawSnow() {
+      snowParticles.forEach((snow) => {
+        // Move towards player (speed effect)
+        snow.y += snow.speed * (1 + snow.z * 2);
+        snow.x += (snow.x - canvas.width / 2) * 0.002 * snow.z;
+
+        // Reset if off screen
+        if (snow.y > canvas.height) {
+          snow.y = -10;
+          snow.x = Math.random() * canvas.width;
+        }
+
+        // Draw with depth
+        const size = snow.size * (0.5 + snow.z * 0.5);
+        const alpha = 0.6 + snow.z * 0.4;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = snow.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = snow.color;
+        ctx.beginPath();
+        ctx.arc(snow.x, snow.y, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    // Draw ice road with reflections
+    function drawIceRoad() {
+      ctx.save();
+
+      // Ice surface gradient
+      const iceGradient = ctx.createLinearGradient(0, canvas.height * 0.6, 0, canvas.height);
+      iceGradient.addColorStop(0, 'rgba(200, 230, 255, 0.1)');
+      iceGradient.addColorStop(0.5, 'rgba(200, 230, 255, 0.3)');
+      iceGradient.addColorStop(1, 'rgba(200, 230, 255, 0.5)');
+      ctx.fillStyle = iceGradient;
+      ctx.fillRect(0, canvas.height * 0.6, canvas.width, canvas.height * 0.4);
+
+      // Reflective streaks (simulating raytracing)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
       ctx.lineWidth = 2;
-      ctx.shadowBlur = 30;
-      ctx.shadowColor = '#00ffff';
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = 'rgba(255, 255, 255, 0.5)';
 
-      // Vertical lines
-      for (let i = 0; i < 10; i++) {
-        const x = (i / 10) * canvas.width;
+      for (let i = 0; i < 8; i++) {
+        const x = (i / 8) * canvas.width;
         const offset = (tunnelOffset % 100) / 100;
         ctx.beginPath();
         ctx.moveTo(x, canvas.height);
-        ctx.lineTo(canvas.width / 2 + (x - canvas.width / 2) * 0.3, canvas.height * offset);
+        ctx.lineTo(canvas.width / 2 + (x - canvas.width / 2) * 0.5, canvas.height * (0.6 + offset * 0.4));
         ctx.stroke();
       }
 
-      // Horizontal lines
-      for (let i = 0; i < 20; i++) {
-        const y = (i / 20) * canvas.height + (tunnelOffset % 50);
-        const scale = 1 - (y / canvas.height) * 0.7;
+      // Horizontal ice lines
+      for (let i = 0; i < 10; i++) {
+        const y = canvas.height * 0.6 + (i / 10) * canvas.height * 0.4 + (tunnelOffset % 40);
+        const scale = 1 - ((y - canvas.height * 0.6) / (canvas.height * 0.4)) * 0.5;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 + scale * 0.2})`;
+        ctx.lineWidth = 1;
+        ctx.shadowBlur = 10;
         ctx.beginPath();
         ctx.moveTo(canvas.width / 2 - (canvas.width / 2) * scale, y);
         ctx.lineTo(canvas.width / 2 + (canvas.width / 2) * scale, y);
         ctx.stroke();
       }
 
-      // Circuit patterns
-      ctx.strokeStyle = '#8a00e6';
-      ctx.lineWidth = 1;
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#8a00e6';
-      for (let i = 0; i < 5; i++) {
-        const x = Math.sin(tunnelOffset * 0.01 + i) * 100 + canvas.width / 2;
-        const y = (i / 5) * canvas.height + (tunnelOffset % 100);
-        ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      // Reflect fireworks on ice
+      fireworks.forEach((fw) => {
+        if (fw.y < canvas.height * 0.6) {
+          const reflectY = canvas.height * 0.6 + (canvas.height * 0.6 - fw.y) * 0.3;
+          ctx.save();
+          ctx.globalAlpha = fw.life * 0.4;
+          const reflectGradient = ctx.createRadialGradient(fw.x, reflectY, 0, fw.x, reflectY, fw.radius * 0.6);
+          reflectGradient.addColorStop(0, fw.color.replace(')', ', 0.3)').replace('rgb', 'rgba'));
+          reflectGradient.addColorStop(1, fw.color.replace(')', ', 0)').replace('rgb', 'rgba'));
+          ctx.fillStyle = reflectGradient;
+          ctx.beginPath();
+          ctx.arc(fw.x, reflectY, fw.radius * 0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      });
 
       ctx.restore();
     }
@@ -215,12 +357,15 @@ export default function CyberpunkNeonChase() {
       ctx.ellipse(playerX, playerY, playerSize * 0.6, playerSize * 0.2, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Dynamic light on floor (casting light effect)
-      const floorLight = ctx.createRadialGradient(playerX, playerY + 50, 0, playerX, playerY + 50, 120);
-      floorLight.addColorStop(0, 'rgba(0, 255, 255, 0.6)');
+      // Dynamic light on ice floor (casting light effect with reflection)
+      const floorLight = ctx.createRadialGradient(playerX, playerY + 50, 0, playerX, playerY + 50, 150);
+      floorLight.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
+      floorLight.addColorStop(0.5, 'rgba(0, 255, 255, 0.4)');
       floorLight.addColorStop(1, 'rgba(0, 255, 255, 0)');
       ctx.fillStyle = floorLight;
-      ctx.fillRect(playerX - 120, playerY + 30, 240, 120);
+      ctx.beginPath();
+      ctx.arc(playerX, playerY + 80, 140, 0, Math.PI * 2);
+      ctx.fill();
 
       ctx.restore();
     }
@@ -445,8 +590,11 @@ export default function CyberpunkNeonChase() {
         lastSpeedIncrease = now;
       }
 
-      // Draw everything
-      drawTunnel();
+      // Draw everything in order
+      drawBackground();
+      spawnFirework();
+      drawSnow();
+      drawIceRoad();
       drawPlayer();
       drawObstacles();
       drawParticles();
@@ -687,5 +835,10 @@ export default function CyberpunkNeonChase() {
     </div>
   );
 }
+
+
+
+
+
 
 
