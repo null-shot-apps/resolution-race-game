@@ -43,8 +43,8 @@ export default function CyberpunkNeonChase() {
       label: string;
     }
 
-    const goodLabels = ['FINANCIAL FREEDOM', 'WEALTH', 'SUCCESS', 'PROSPERITY'];
-    const badLabels = ['RUG', 'SCAM', 'LOSS', 'BROKE'];
+    const goodLabels = ['Profit', 'Holiday', 'Healthy', 'Financial Freedom', 'Happy', '100x Gem', 'Airdrop', 'WAGMI', 'Bull Market', 'Passive Income', 'New ATH', 'Green Candle', 'Freedom', 'Good Sleep', 'Promotion', 'Diamond Hands', 'Inner Peace', 'Debt Free', 'Confidence', 'Smart Move'];
+    const badLabels = ['Rekt', 'Drain', 'Rug Pull', 'Bear Market', 'Liquidation', 'FOMO', 'FUD', 'High Gas Fee', 'Scam', 'Phishing', 'Red Candle', 'Inflation', 'Burnout', 'Overthinking', 'Bad Vibes', 'Procrastination', 'Insomnia', 'Hack', 'Panic Sell', 'Paper Hands'];
 
     const obstacles: Obstacle[] = [];
     let lastObstacleTime = Date.now();
@@ -641,7 +641,7 @@ export default function CyberpunkNeonChase() {
             >
               GAME OVER
             </h1>
-            <p className="text-2xl text-cyan-400 mb-8">Score reached 0</p>
+            <p className="text-2xl text-cyan-400 mb-8">Try to set your resolutions!</p>
             <button
               onClick={resetGame}
               className="px-8 py-4 text-xl font-bold bg-cyan-500 hover:bg-cyan-400 text-black rounded-lg transition-all"
@@ -670,7 +670,7 @@ export default function CyberpunkNeonChase() {
             >
               VICTORY!
             </h1>
-            <p className="text-2xl text-cyan-400 mb-8">You reached 500 points!</p>
+            <p className="text-2xl text-cyan-400 mb-8">Congratulations, you are ready for 2026 resolutions!</p>
             <button
               onClick={resetGame}
               className="px-8 py-4 text-xl font-bold bg-cyan-500 hover:bg-cyan-400 text-black rounded-lg transition-all"
@@ -687,4 +687,5 @@ export default function CyberpunkNeonChase() {
     </div>
   );
 }
+
 
